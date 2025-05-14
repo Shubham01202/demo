@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Add or Edit Listing - GadgetHub</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body class="d-flex flex-column min-vh-100">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-3" href="index.html">GadgetHub</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-bs-toggle="collapse"
+        data-bs-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Toggle navigation"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav align-items-center" id="auth-buttons">
+          <!-- Auth buttons injected by auth.js -->
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container flex-grow-1 my-4">
+    <h1 class="mb-4 text-center text-primary fw-bold" id="form-title">Add Listing</h1>
+    <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+      <form id="listing-form" novalidate>
+        <div class="mb-3">
+          <label for="brand" class="form-label">Brand</label>
+          <input type="text" class="form-control" id="brand" required />
+          <div class="invalid-feedback">Please enter the brand.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="model" class="form-label">Model</label>
+          <input type="text" class="form-control" id="model" required />
+          <div class="invalid-feedback">Please enter the model.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="price" class="form-label">Price ($)</label>
+          <input type="number" class="form-control" id="price" min="0" required />
+          <div class="invalid-feedback">Please enter a valid price.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="processor" class="form-label">Processor</label>
+          <input type="text" class="form-control" id="processor" required />
+          <div class="invalid-feedback">Please enter the processor info.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="battery" class="form-label">Battery</label>
+          <input type="text" class="form-control" id="battery" required />
+          <div class="invalid-feedback">Please enter battery details.</div>
+        </div>
+
+        <div class="mb-3">
+          <label for="category" class="form-label">Category</label>
+          <select class="form-select" id="category" required>
+            <option value="" disabled selected>Select a category</option>
+            <option value="Watch">Watch</option>
+            <option value="Mobile">Mobile</option>
+            <option value="Laptop">Laptop</option>
+            <option value="Earbuds">Earbuds</option>
+          </select>
+          <div class="invalid-feedback">Please select a category.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label d-block">Condition</label>
+          <div class="form-check form-check-inline">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="condition"
+              id="conditionNew"
+              value="New"
+              required
+            />
+            <label class="form-check-label" for="conditionNew">New</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="condition" id="conditionOld" value="Old" />
+            <label class="form-check-label" for="conditionOld">Old</label>
+          </div>
+          <div class="invalid-feedback d-block" id="condition-error" style="display:none;">
+            Please select the condition.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="image" class="form-label">Image Upload</label>
+          <input type="file" class="form-control" id="image" accept="image/*" />
+          <div class="invalid-feedback">Please upload an image.</div>
+          <img id="image-preview" src="" alt="Image Preview" class="img-fluid mt-3" style="max-height: 200px; display:none; border-radius: 8px;" />
+        </div>
+
+        <div id="form-error" class="text-danger mb-3" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-primary w-100">Submit</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-light text-center text-muted py-3 shadow-sm mt-auto">
+    <div class="container">&copy; 2024 GadgetHub. All rights reserved.</div>
+  </footer>
+
+  <!-- Bootstrap JS bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Helper functions
+    function getCurrentUser() {
+      const userStr = localStorage.getItem('gadgethubUser');
+      return userStr ? JSON.parse(userStr) : null;
+    }
+
+    function getListings() {
+      const listingsStr = localStorage.getItem('gadgethubListings');
+      return listingsStr ? JSON.parse(listingsStr) : [];
+    }
+
+    function saveListings(listings) {
+      localStorage.setItem('gadgethubListings', JSON.stringify(listings));
+    }
+
+    function getQueryParam(param) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(param);
+    }
+
+    // Image preview handling
+    const imageInput = document.getElementById('image');
+    const imagePreview = document.getElementById('image-preview');
+    let uploadedImageData = ''; // holds base64 image data
+
+    imageInput.addEventListener('change', () => {
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          uploadedImageData = e.target.result;
+          imagePreview.src = uploadedImageData;
+          imagePreview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        uploadedImageData = '';
+        imagePreview.src = '';
+        imagePreview.style.display = 'none';
+      }
+    });
+
+    // Form Elements
+    const form = document.getElementById('listing-form');
+    const formTitle = document.getElementById('form-title');
+    const conditionInputs = form.elements['condition'];
+    const conditionError = document.getElementById('condition-error');
+    const formError = document.getElementById('form-error');
+
+    let editListingId = getQueryParam('edit');
+    let listings = getListings();
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      alert('You must be logged in to add or edit a listing.');
+      window.location.href = 'login.html';
+    }
+
+    // Prefill form if editing
+    if (editListingId) {
+      editListingId = parseInt(editListingId, 10);
+      const listing = listings.find(l => l.id === editListingId);
+
+      if (!listing) {
+        alert('Listing not found.');
+        window.location.href = 'index.html';
+      } else if (listing.owner !== currentUser.username) {
+        alert('You are not authorized to edit this listing.');
+        window.location.href = 'index.html';
+      } else {
+        formTitle.textContent = 'Edit Listing';
+        form.brand.value = listing.brand;
+        form.model.value = listing.model;
+        form.price.value = listing.price;
+        form.processor.value = listing.processor;
+        form.battery.value = listing.battery;
+        form.category.value = listing.category;
+        for (const condInput of conditionInputs) {
+          if (condInput.value === listing.condition) {
+            condInput.checked = true;
+          }
+        }
+        if (listing.image) {
+          uploadedImageData = listing.image;
+          imagePreview.src = uploadedImageData;
+          imagePreview.style.display = 'block';
+        }
+      }
+    }
+
+    // Validation helper for radio buttons
+    function isConditionSelected() {
+      for (const input of conditionInputs) {
+        if (input.checked) return true;
+      }
+      return false;
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      formError.style.display = 'none';
+
+      // Basic validation
+      if (!form.brand.value.trim()) {
+        form.brand.classList.add('is-invalid');
+      } else {
+        form.brand.classList.remove('is-invalid');
+      }
+
+      if (!form.model.value.trim()) {
+        form.model.classList.add('is-invalid');
+      } else {
+        form.model.classList.remove('is-invalid');
+      }
+
+      if (!form.price.value || form.price.value < 0) {
+        form.price.classList.add('is-invalid');
+      } else {
+        form.price.classList.remove('is-invalid');
+      }
+
+      if (!form.processor.value.trim()) {
+        form.processor.classList.add('is-invalid');
+      } else {
+        form.processor.classList.remove('is-invalid');
+      }
+
+      if (!form.battery.value.trim()) {
+        form.battery.classList.add('is-invalid');
+      } else {
+        form.battery.classList.remove('is-invalid');
+      }
+
+      if (!form.category.value) {
+        form.category.classList.add('is-invalid');
+      } else {
+        form.category.classList.remove('is-invalid');
+      }
+
+      if (!isConditionSelected()) {
+        conditionError.style.display = 'block';
+      } else {
+        conditionError.style.display = 'none';
+      }
+
+      if (
+        form.brand.classList.contains('is-invalid') ||
+        form.model.classList.contains('is-invalid') ||
+        form.price.classList.contains('is-invalid') ||
+        form.processor.classList.contains('is-invalid') ||
+        form.battery.classList.contains('is-invalid') ||
+        form.category.classList.contains('is-invalid') ||
+        !isConditionSelected()
+      ) {
+        return; // Do not submit if validation fails
+      }
+
+      if (!uploadedImageData) {
+        formError.textContent = 'Please upload an image for the listing.';
+        formError.style.display = 'block';
+        return;
+      }
+
+      // Prepare listing object
+      const newListing = {
+        id: editListingId || Date.now(),
+        brand: form.brand.value.trim(),
+        model: form.model.value.trim(),
+        price: parseFloat(form.price.value),
+        processor: form.processor.value.trim(),
+        battery: form.battery.value.trim(),
+        category: form.category.value,
+        condition: [...conditionInputs].find(input => input.checked).value,
+        image: uploadedImageData,
+        owner: currentUser.username,
+      };
+
+      if (editListingId) {
+        // Update existing listing
+        const index = listings.findIndex(l => l.id === editListingId);
+        if (index !== -1) {
+          listings[index] = newListing;
+        } else {
+          formError.textContent = 'Error updating listing. Please try again.';
+          formError.style.display = 'block';
+          return;
+        }
+      } else {
+        // Add new listing
+        listings.push(newListing);
+      }
+
+      saveListings(listings);
+      alert(editListingId ? 'Listing updated successfully!' : 'Listing added successfully!');
+      window.location.href = 'index.html';
+    });
+  </script>
+  <script src="./auth.js"></script>
+</body>
+</html>

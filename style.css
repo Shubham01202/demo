@@ -1,0 +1,44 @@
+/* Make sure body and html take full height */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f9fafb;
+  color: #333;
+}
+
+/* The flex container wraps everything for sticky footer */
+.d-flex.flex-column.min-vh-100 {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main content grows to fill available space */
+main.flex-grow-1 {
+  flex-grow: 1;
+}
+
+/* Footer styles */
+footer.bg-light {
+  background-color: #f1f3f5 !important;
+  /* no position fixed here - flex layout handles placement */
+  box-shadow: 0 -1px 5px rgba(0,0,0,0.1);
+  font-size: 0.9rem;
+}
+
+/* Navbar brand style */
+.navbar-brand {
+  color: #0062cc;
+}
+
+.navbar-brand:hover {
+  color: #0056b3;
+}
+
+/* Optional: Add subtle hover effect for gadget cards */
+.card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  transition: box-shadow 0.3s ease-in-out;
+}
